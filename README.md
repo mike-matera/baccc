@@ -1,2 +1,2 @@
-# baccc
-Files used for Bay Area Cyber Competitions Program
+# Bay Area Cyber Competitions
+Files used in the program. 
