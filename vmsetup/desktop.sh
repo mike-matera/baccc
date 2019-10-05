@@ -6,7 +6,7 @@ apt install apt-transport-https curl xfce4 xrdp -y
 curl -s https://brave-browser-apt-release.s3.brave.com/brave-core.asc | sudo apt-key --keyring /etc/apt/trusted.gpg.d/brave-browser-release.gpg add -
 source /etc/os-release
 echo "deb [arch=amd64] https://brave-browser-apt-release.s3.brave.com/ $UBUNTU_CODENAME main" | sudo tee /etc/apt/sources.list.d/brave-browser-release-${UBUNTU_CODENAME}.list
-apt update && apt install firefox gcc gdb docker.io brave-browser zip unzip openjdk-11-jre icoutils openvpn wireshark -y
+apt update && apt install openvpn firefox gcc gdb docker.io brave-browser zip unzip openjdk-11-jre icoutils openvpn wireshark -y
 
 #User Creation
 clear
@@ -16,7 +16,7 @@ while  [ $counter -le 100 ]
 do
         useradd -s /bin/bash -m baccc$counter
         usermod -aG sudo baccc$counter
-        usermod -aG admin baccc$counter
+        usermod -aG admin baccc$counter #comment this line if running on docker
         echo baccc$counter:baccc123 | chpasswd
         ((counter++))
 done
