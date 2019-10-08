@@ -1,12 +1,13 @@
 #!/bin/bash
-#This script will prepare a Cloud VM (Digital Ocean / Google Cloud) for use with 100 users via RDP with Brave, and OpenVPN installed. 
+#This script will prepare a Cloud VM (Digital Ocean) into a Kali Machine accessible via RDP.
 #Assuming you are Root:
+
 apt update
 apt install dirmngr -y
 echo "deb http://http.kali.org/kali kali-rolling main non-free contrib" >> /etc/apt/sources.list
 apt-key adv --keyserver hkp://keys.gnupg.net --recv-keys 7D8D0BF6
 apt update && apt dist-upgrade -y
-apt install apt-transport-https curl xrdp -y
+apt install xrdp -y
 apt install kali-desktop-xfce -y
 apt install kali-linux-default
 
@@ -14,10 +15,10 @@ apt install kali-linux-default
 clear
 echo "Creating Users"
 counter=1
-while  [ $counter -le 20 ]
+while  [ $counter -le 2 ]
 do
-        usermod -aG sudo baccc$counter
-        echo baccc$counter:baccc123 | chpasswd
+        usermod -aG sudo kali$counter
+        echo kali$counter:password123 | chpasswd
         ((counter++))
 done
 
