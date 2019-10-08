@@ -13,11 +13,12 @@ apt install xrdp kali-desktop-xfce kali-linux-default -y
 clear
 echo "Creating Users"
 counter=1
-while  [ $counter -le 2 ]
+while  [ $counter -le 100 ]
 do
-        usermod -aG sudo kali$counter
-        echo kali$counter:password123 | chpasswd
-        ((counter++))
+	useradd -s /bin/bash -m kali$counter
+    usermod -aG sudo kali$counter
+    echo kali$counter:password123 | chpasswd
+    ((counter++))
 done
 
 #enable RDP to the VM
