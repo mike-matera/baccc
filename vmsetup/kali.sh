@@ -7,9 +7,7 @@ apt install dirmngr -y
 echo "deb http://http.kali.org/kali kali-rolling main non-free contrib" >> /etc/apt/sources.list
 apt-key adv --keyserver hkp://keys.gnupg.net --recv-keys 7D8D0BF6
 apt update && apt dist-upgrade -y
-apt install xrdp -y
-apt install kali-desktop-xfce -y
-apt install kali-linux-default
+apt install xrdp kali-desktop-xfce kali-linux-default -y
 
 #User Creation; comment the while look if you are deploying this locally
 clear
