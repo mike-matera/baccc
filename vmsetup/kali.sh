@@ -7,21 +7,6 @@ apt install dirmngr -y
 echo "deb http://http.kali.org/kali kali-rolling main non-free contrib" >> /etc/apt/sources.list
 apt-key adv --keyserver hkp://keys.gnupg.net --recv-keys 7D8D0BF6
 apt update && apt dist-upgrade -y
-apt install xrdp kali-desktop-xfce kali-linux-default -y
-
-#User Creation; comment the while look if you are deploying this locally
-clear
-echo "Creating Users"
-counter=1
-while  [ $counter -le 100 ]
-do
-	useradd -s /bin/bash -m kali$counter
-    usermod -aG sudo kali$counter
-    echo kali$counter:password123 | chpasswd
-    ((counter++))
-done
-
-#enable RDP to the VM
-sed -i '7i\echo xfce4-session >~/.xsession\' /etc/xrdp/startwm.sh
-service xrdp restart
-echo "Ready for Work"
+apt install kali-linux-default -y
+apt install apache2
+systemctl enable apache2
