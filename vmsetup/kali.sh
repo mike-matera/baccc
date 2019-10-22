@@ -1,12 +1,11 @@
 #!/bin/bash
-#This script will prepare a Cloud VM (Digital Ocean) into a Kali Machine accessible via RDP.
+#This script will prepare a Cloud VM (Digital Ocean) into a Kali Machine.
 #Assuming you are Root:
 apt update
 apt install dirmngr -y
-rm -rf /etc/apt/sources.list
+clear
 echo "deb http://http.kali.org/kali kali-rolling main non-free contrib" >> /etc/apt/sources.list
 apt-key adv --keyserver hkp://keys.gnupg.net --recv-keys 7D8D0BF6
+clear
 apt update && apt dist-upgrade -y
-apt install kali-linux-default -y
-apt install apache2
-systemctl enable apache2
+echo "Ready To Install Kali Programs"
