@@ -90,12 +90,12 @@ echo "########################################################################"
 }
 
 echo "########################################################################"
-echo "Th????"
-echo "Do you have a domain? (y/n)"
+echo "This script will install and do the intial configuration for CTFd."
+echo "Do you have an FQDN for this server (y/n)"
 echo "#######################################################################"
 read answer
 if [[ $answer == y ]]; then
-	echo "What is the Domain Name for this server?"
+	echo "What is the FQDN?"
 	read dns
 	setup
 	https
