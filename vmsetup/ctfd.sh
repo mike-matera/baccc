@@ -2,7 +2,6 @@
 #CTFd Install and Configuration Script
 #Created by Jacobs Otto and Irvin Lemus
 
-install:
 CTF_NAME="CTFd"
 
 #Root Required
@@ -11,6 +10,7 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+function setup {
 #Perform updates and upgrades (upgrade isn't that important).
 apt update && apt upgrade -y
 
@@ -30,6 +30,16 @@ echo "Y2QgL2hvbWUvQ1RGZC9DVEZkCnNlcnZpY2Ugbmdpbnggc3RhcnQKbm9odXAgZ3VuaWNvcm4gLW
 echo "aW1wb3J0IG11bHRpcHJvY2Vzc2luZwoKYmluZCA9ICIwLjAuMC4wOjgwMDAiCndvcmtlcnMgPSBtdWx0aXByb2Nlc3NpbmcuY3B1X2NvdW50KCkgKiAyICsgMQp0aHJlYWRzID0gMgp3b3JrZXJfY2xhc3MgPSAiZ2V2ZW50Igp3b3JrZXJfY29ubmVjdGlvbnMgPSA0MDAKdGltZW91dCA9IDMwCmtlZXBhbGl2ZSA9IDIK" | base64 -d >> /home/CTFd/CTFd/gunicorn.cfg
 chmod +x start.sh
 
+#Adding Postgres SQL
+#apt update && apt install postgresql postgresql-client postgresql-contrib python-psycopg2 -y
+#sudo -s
+#sudo -u postgres psql postgres
+#CREATE EXTENSION adminpack;
+#echo "postgres://postgres:$dbpw@localhost/ctfd" >> config.py
+#python config.py
+}
+
+function https {
 #Install nginx.
 apt-get -y install nginx;
 ufw allow 'Nginx Full';
@@ -43,54 +53,30 @@ echo "cHJveHlfY2FjaGVfcGF0aCAvaG9tZS9DVEZkL25naW54Q2FjaGUgbGV2ZWxzPTE6MiBrZXlzX3
 rm /etc/nginx/sites-enabled/default
 ln -s /etc/nginx/sites-available/CTFd /etc/nginx/sites-enabled/default
 
-#Adding Postgres SQL
-#apt update && apt install postgresql postgresql-client postgresql-contrib python-psycopg2 -y
-#sudo -s
-#sudo -u postgres psql postgres
-#CREATE EXTENSION adminpack;
-#echo "What is the new password for Postgres:="
-#stty -echo
-#read dbpw
-#stty echo
-#echo "postgres://postgres:$dbpw@localhost/ctfd" >> config.py
-#python config.py
-goto certbot
+#Install certbot.
+nohup /home/CTFd/CTFd/start.sh
+sleep 10
+nohup /home/CTFd/CTFd/start.sh &
+add-apt-repository ppa:certbot/certbot -y;
+apt update;
+apt install certbot python-certbot-nginx -y;
+certbot --nginx certonly
+sed -i '11i\         ssl_certificate /etc/letsencrypt/live/'$dns'/fullchain.pem;\' /etc/nginx/sites-available/CTFd
+sed -i '12i\         ssl_certificate_key /etc/letsencrypt/live/'$dns'/privkey.pem;\' /etc/nginx/sites-available/CTFd
+sed -i '13i\         include /etc/letsencrypt/options-ssl-nginx.conf;\' /etc/nginx/sites-available/CTFd
+/etc/init.d/nginx restart
 
-#Final Steps
-certbot:
-clear
-echo "########################################################################"
-echo "This part depends on whether you have a DNS entry for this server"
-echo "Do you have a domain? (y/n)"
-echo "#######################################################################"
-read domain
-if [[ $domain == y ]]; then
-
-	#Install certbot.
-	echo "What is the Domain Name for this server?"
-	read dns
-	nohup /home/CTFd/CTFd/start.sh
-	sleep 10
-	nohup /home/CTFd/CTFd/start.sh &
-	add-apt-repository ppa:certbot/certbot -y;
-	apt update;
-	apt install certbot python-certbot-nginx -y;
-	certbot --nginx certonly
-	sed -i '11i\         ssl_certificate /etc/letsencrypt/live/'$dns'/fullchain.pem;\' /etc/nginx/sites-available/CTFd
-	sed -i '12i\         ssl_certificate_key /etc/letsencrypt/live/'$dns'/privkey.pem;\' /etc/nginx/sites-available/CTFd
-	sed -i '13i\         include /etc/letsencrypt/options-ssl-nginx.conf;\' /etc/nginx/sites-available/CTFd
-	/etc/init.d/nginx restart
-	#Create File to run CTFd at boot
-	echo "IyEvYmluL2Jhc2gKI1NldHVwIHBlcnNpc3RlbmNlIGZvciBDVEZkLgpDVEZfTkFNRT0iQ1RGZCIKY2QgL2V0Yy9jcm9uLmQvOwplY2hvIC1lICJTSEVMTD0vYmluL3NoIiA+ICRDVEZfTkFNRTsKZWNobyAtZSAiUEFUSD0vdXNyL2xvY2FsL3NiaW46L3Vzci9sb2NhbC9iaW46L3NiaW46L2JpbjovdXNyL3NiaW46L3Vzci9iaW4iID4+ICRDVEZfTkFNRTsKZWNobyAtZSAiQHJlYm9vdCAgIHJvb3QgICAgL2hvbWUvQ1RGZC9DVEZkL3N0YXJ0LnNoIiA+PiAkQ1RGX05BTUU7" | base64 -d >> /home/CTFd/CTFd/cron.sh
-	chmod +x cron.sh && ./cron.sh;
+#Create File to run CTFd at boot
+echo "IyEvYmluL2Jhc2gKI1NldHVwIHBlcnNpc3RlbmNlIGZvciBDVEZkLgpDVEZfTkFNRT0iQ1RGZCIKY2QgL2V0Yy9jcm9uLmQvOwplY2hvIC1lICJTSEVMTD0vYmluL3NoIiA+ICRDVEZfTkFNRTsKZWNobyAtZSAiUEFUSD0vdXNyL2xvY2FsL3NiaW46L3Vzci9sb2NhbC9iaW46L3NiaW46L2JpbjovdXNyL3NiaW46L3Vzci9iaW4iID4+ICRDVEZfTkFNRTsKZWNobyAtZSAiQHJlYm9vdCAgIHJvb3QgICAgL2hvbWUvQ1RGZC9DVEZkL3N0YXJ0LnNoIiA+PiAkQ1RGX05BTUU7" | base64 -d >> /home/CTFd/CTFd/cron.sh
+chmod +x cron.sh && ./cron.sh;
 echo "########################################################################"
 echo "CTFd is ready"
-echo "Please go to the https://Domain Name to continue."
+echo "Please go to the https://"$dns" to continue."
 echo "########################################################################"
+}
 
-else
+function http {
 #Create File to run CTFd at boot
-apt purge nginx* -y
 echo "aW1wb3J0IG11bHRpcHJvY2Vzc2luZwoKYmluZCA9ICIwLjAuMC4wOjgwIgp3b3JrZXJzID0gbXVsdGlwcm9jZXNzaW5nLmNwdV9jb3VudCgpICogMiArIDEKdGhyZWFkcyA9IDIKd29ya2VyX2NsYXNzID0gImdldmVudCIKd29ya2VyX2Nvbm5lY3Rpb25zID0gNDAwCnRpbWVvdXQgPSAzMAprZWVwYWxpdmUgPSAyCgo=" | base64 -d >> /home/CTFd/CTFd/gunicorn.cfg
 echo "IyEvYmluL2Jhc2gKI1NldHVwIHBlcnNpc3RlbmNlIGZvciBDVEZkLgpDVEZfTkFNRT0iQ1RGZCIKY2QgL2V0Yy9jcm9uLmQvOwplY2hvIC1lICJTSEVMTD0vYmluL3NoIiA+ICRDVEZfTkFNRTsKZWNobyAtZSAiUEFUSD0vdXNyL2xvY2FsL3NiaW46L3Vzci9sb2NhbC9iaW46L3NiaW46L2JpbjovdXNyL3NiaW46L3Vzci9iaW4iID4+ICRDVEZfTkFNRTsKZWNobyAtZSAiQHJlYm9vdCAgIHJvb3QgICAgL2hvbWUvQ1RGZC9DVEZkL3N0YXJ0LnNoIiA+PiAkQ1RGX05BTUU7" | base64 -d >> /home/CTFd/CTFd/cron.sh
 chmod +x cron.sh && ./cron.sh;
@@ -101,4 +87,19 @@ echo "########################################################################"
 echo "CTFd is ready without a Domain"
 echo "Please go to the IP address in a browser continue."
 echo "########################################################################"
+}
+
+echo "########################################################################"
+echo "Th????"
+echo "Do you have a domain? (y/n)"
+echo "#######################################################################"
+read answer
+if [[ $answer == y ]]; then
+	echo "What is the Domain Name for this server?"
+	read dns
+	setup
+	https
+else
+	setup
+	http
 fi
