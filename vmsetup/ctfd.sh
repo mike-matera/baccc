@@ -31,9 +31,9 @@ echo "aW1wb3J0IG11bHRpcHJvY2Vzc2luZwoKYmluZCA9ICIwLjAuMC4wOjgwMDAiCndvcmtlcnMgPS
 chmod +x start.sh
 
 #Adding Postgres SQL
-#apt update && apt install postgresql postgresql-client postgresql-contrib python-psycopg2 -y
-#sudo -s
-#sudo -u postgres psql postgres
+#pw=$(head /dev/urandom | md5sum)
+#dbpw=$(echo $pw | awk '{print $1}')
+#su postgres -c "psql -U postgres -d postgres -c \"alter user postgres with password '$dbpw';\""
 #CREATE EXTENSION adminpack;
 #echo "postgres://postgres:$dbpw@localhost/ctfd" >> config.py
 #python config.py
