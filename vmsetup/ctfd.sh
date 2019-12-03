@@ -26,10 +26,23 @@ cd CTFd;
 #Uncomment if you want to edit the config file.
 #vim CTFd/config.py;
 
-echo "Y2QgL2hvbWUvQ1RGZC9DVEZkCnNlcnZpY2Ugbmdpbnggc3RhcnQKbm9odXAgZ3VuaWNvcm4gLWMgZ3VuaWNvcm4uY2ZnICJDVEZkOmNyZWF0ZV9hcHAoKSImCg==" | base64 -d >> /home/CTFd/CTFd/start.sh
-echo "aW1wb3J0IG11bHRpcHJvY2Vzc2luZwoKYmluZCA9ICIwLjAuMC4wOjgwMDAiCndvcmtlcnMgPSBtdWx0aXByb2Nlc3NpbmcuY3B1X2NvdW50KCkgKiAyICsgMQp0aHJlYWRzID0gMgp3b3JrZXJfY2xhc3MgPSAiZ2V2ZW50Igp3b3JrZXJfY29ubmVjdGlvbnMgPSA0MDAKdGltZW91dCA9IDMwCmtlZXBhbGl2ZSA9IDIK" | base64 -d >> /home/CTFd/CTFd/gunicorn.cfg
-chmod +x start.sh
+cat > /home/CTFd/CTFd/start.sh <<EOF
+cd /home/CTFd/CTFd
+service nginx start
+nohup gunicorn -c gunicorn.cfg "CTFd:create_app()"&
+EOF
+cat > /home/CTFd/CTFd/gunicorn.cfg <<EOF
+import multiprocessing
 
+bind = "0.0.0.0:8000"
+workers = multiprocessing.cpu_count() * 2 + 1
+threads = 2
+worker_class = "gevent"
+worker_connections = 400
+timeout = 30
+keepalive = 2
+EOF
+chmod +x start.sh
 #Adding Postgres SQL
 #pw=$(head /dev/urandom | md5sum)
 #dbpw=$(echo $pw | awk '{print $1}')
@@ -48,8 +61,126 @@ ufw allow 'Nginx HTTPS';
 
 #Nginx Configuration
 rm /etc/nginx/nginx.conf
-echo "dXNlciB3d3ctZGF0YTsKd29ya2VyX3Byb2Nlc3NlcyA0OwpwaWQgL3J1bi9uZ2lueC5waWQ7Cndvcmtlcl9ybGltaXRfbm9maWxlIDE1MDA7CgpldmVudHMgewogICAgCXdvcmtlcl9jb25uZWN0aW9ucyAxNTAwOwogICAgCSMgbXVsdGlfYWNjZXB0IG9uOwp9CgpodHRwIHsKCiAgICAJb3Blbl9maWxlX2NhY2hlIG1heD0xMDI0IGluYWN0aXZlPTEwczsKICAgIAlvcGVuX2ZpbGVfY2FjaGVfdmFsaWQgMTIwczsKICAgIAlvcGVuX2ZpbGVfY2FjaGVfbWluX3VzZXMgMTsKICAgIAlvcGVuX2ZpbGVfY2FjaGVfZXJyb3JzIG9uOwoKICAgIAkjIwogICAgCSMgQmFzaWMgU2V0dGluZ3MKICAgIAkjIwoKICAgIAlzZW5kZmlsZSBvbjsKICAgIAl0Y3Bfbm9wdXNoIG9uOwogICAgCXRjcF9ub2RlbGF5IG9uOwogICAgCWtlZXBhbGl2ZV90aW1lb3V0IDY1OwogICAgCXR5cGVzX2hhc2hfbWF4X3NpemUgMjA0ODsKICAgIAkjIHNlcnZlcl90b2tlbnMgb2ZmOwoKICAgIAkjIHNlcnZlcl9uYW1lc19oYXNoX2J1Y2tldF9zaXplIDY0OwogICAgCSMgc2VydmVyX25hbWVfaW5fcmVkaXJlY3Qgb2ZmOwoKICAgIAlpbmNsdWRlIC9ldGMvbmdpbngvbWltZS50eXBlczsKICAgIAlkZWZhdWx0X3R5cGUgYXBwbGljYXRpb24vb2N0ZXQtc3RyZWFtOwoKICAgIAkjIwogICAgCSMgU1NMIFNldHRpbmdzCiAgICAJIyMKCiAgICAJc3NsX3Byb3RvY29scyBUTFN2MSBUTFN2MS4xIFRMU3YxLjI7ICMgRHJvcHBpbmcgU1NMdjMsIHJlZjogUE9PRExFCiAgICAJc3NsX3ByZWZlcl9zZXJ2ZXJfY2lwaGVycyBvbjsKCiAgICAJIyMKICAgIAkjIExvZ2dpbmcgU2V0dGluZ3MKICAgIAkjIwoKICAgIAlhY2Nlc3NfbG9nIC92YXIvbG9nL25naW54L2FjY2Vzcy5sb2c7CiAgICAJZXJyb3JfbG9nIC92YXIvbG9nL25naW54L2Vycm9yLmxvZzsKCiAgICAJIyMKICAgIAkjIEd6aXAgU2V0dGluZ3MKICAgIAkjIwoKICAgIAlnemlwIG9uOwogICAgCWd6aXBfZGlzYWJsZSAibXNpZTYiOwoKICAgIAkjIGd6aXBfdmFyeSBvbjsKICAgIAkjIGd6aXBfcHJveGllZCBhbnk7CiAgICAJIyBnemlwX2NvbXBfbGV2ZWwgNjsKICAgIAkjIGd6aXBfYnVmZmVycyAxNiA4azsKICAgIAkjIGd6aXBfaHR0cF92ZXJzaW9uIDEuMTsKICAgIAkjIGd6aXBfdHlwZXMgdGV4dC9wbGFpbiB0ZXh0L2NzcyBhcHBsaWNhdGlvbi9qc29uIGFwcGxpY2F0aW9uL2phdmFzY3JpcHQgdGV4dC94bWwgYXBwbGljYXRpb24veG1sIGFwcGxpY2F0aW9uL3htbCtyc3MgdGV4dC9qYXZhc2NyaXB0OwoKICAgIAkjIwogICAgCSMgVmlydHVhbCBIb3N0IENvbmZpZ3MKICAgIAkjIwoKICAgIAlpbmNsdWRlIC9ldGMvbmdpbngvY29uZi5kLyouY29uZjsKICAgIAlpbmNsdWRlIC9ldGMvbmdpbngvc2l0ZXMtZW5hYmxlZC8qOwp9CgoKI21haWwgewojICAgCSMgU2VlIHNhbXBsZSBhdXRoZW50aWNhdGlvbiBzY3JpcHQgYXQ6CiMgICAJIyBodHRwOi8vd2lraS5uZ2lueC5vcmcvSW1hcEF1dGhlbnRpY2F0ZVdpdGhBcGFjaGVQaHBTY3JpcHQKIwojICAgCSMgYXV0aF9odHRwIGxvY2FsaG9zdC9hdXRoLnBocDsKIyAgIAkjIHBvcDNfY2FwYWJpbGl0aWVzICJUT1AiICJVU0VSIjsKIyAgIAkjIGltYXBfY2FwYWJpbGl0aWVzICJJTUFQNHJldjEiICJVSURQTFVTIjsKIwojICAgCXNlcnZlciB7CiMgICAgICAgICAgIAlsaXN0ZW4gCWxvY2FsaG9zdDoxMTA7CiMgICAgICAgICAgIAlwcm90b2NvbCAgIHBvcDM7CiMgICAgICAgICAgIAlwcm94eSAgCW9uOwojICAgCX0KIwojICAgCXNlcnZlciB7CiMgICAgICAgICAgIAlsaXN0ZW4gCWxvY2FsaG9zdDoxNDM7CiMgICAgICAgICAgIAlwcm90b2NvbCAgIGltYXA7CiMgICAgICAgICAgIAlwcm94eSAgCW9uOwojICAgCX0KI30KCg==" | base64 -d >> /etc/nginx/nginx.conf
-echo "cHJveHlfY2FjaGVfcGF0aCAvaG9tZS9DVEZkL25naW54Q2FjaGUgbGV2ZWxzPTE6MiBrZXlzX3pvbmU9bXlfY2FjaGU6MTBtIG1heF9zaXplPThnCiAgICAgICAgICAgICAJaW5hY3RpdmU9MTBtIHVzZV90ZW1wX3BhdGg9b2ZmOwpzZXJ2ZXIgewogICAgCWxpc3RlbiA4MCBkZWZhdWx0X3NlcnZlcjsKICAgIAlzZXJ2ZXJfbmFtZSBfOwogICAgCXJldHVybiAzMDEgaHR0cHM6Ly8kaG9zdCRyZXF1ZXN0X3VyaTsKfQoKc2VydmVyIHsKICAgIAlsaXN0ZW4gNDQzIHNzbDsKICAgIAkjc3NsX2NlcnRpZmljYXRlIC9ldGMvbGV0c2VuY3J5cHQvbGl2ZS9ZT1VSQ1RGRE9NQUlOLkRPTUFJTi9mdWxsY2hhaW4ucGVtOwogICAgCSNzc2xfY2VydGlmaWNhdGVfa2V5IC9ldGMvbGV0c2VuY3J5cHQvbGl2ZS9ZT1VSQ1RGRE9NQUlOLkRPTUFJTi9wcml2a2V5LnBlbTsKICAgIAkjaW5jbHVkZSAvZXRjL2xldHNlbmNyeXB0L29wdGlvbnMtc3NsLW5naW54LmNvbmY7CiAgICAJc2VydmVyX25hbWUgQ1RGZDsKICAgIAlsb2NhdGlvbiA9IC9mYXZpY29uLmljbyB7IGFjY2Vzc19sb2cgb2ZmOyBsb2dfbm90X2ZvdW5kIG9mZjsgfQogbG9jYXRpb24gL3N0YXRpYy8gewogICAgCXJvb3QgL2hvbWUvQ1RGZC9DVEZkL0NURmQ7CiB9CiAgICAJbG9jYXRpb24gLyB7CiAgICAJaW5jbHVkZSBwcm94eV9wYXJhbXM7CiAgICAJcHJveHlfY2FjaGUgbXlfY2FjaGU7CiAgICAJcHJveHlfcGFzcyBodHRwOi8vbG9jYWxob3N0OjgwMDA7CiAgICAJfQogfQoK" | base64 -d >> /etc/nginx/sites-available/CTFd
+cat > /etc/nginx/nginx.conf <<EOF
+user www-data;
+worker_processes 4;
+pid /run/nginx.pid;
+worker_rlimit_nofile 1500;
+
+events {
+    	worker_connections 1500;
+    	# multi_accept on;
+}
+
+http {
+
+    	open_file_cache max=1024 inactive=10s;
+    	open_file_cache_valid 120s;
+    	open_file_cache_min_uses 1;
+    	open_file_cache_errors on;
+
+    	##
+    	# Basic Settings
+    	##
+
+    	sendfile on;
+    	tcp_nopush on;
+    	tcp_nodelay on;
+    	keepalive_timeout 65;
+    	types_hash_max_size 2048;
+    	# server_tokens off;
+
+    	# server_names_hash_bucket_size 64;
+    	# server_name_in_redirect off;
+
+    	include /etc/nginx/mime.types;
+    	default_type application/octet-stream;
+
+    	##
+    	# SSL Settings
+    	##
+
+    	ssl_protocols TLSv1 TLSv1.1 TLSv1.2; # Dropping SSLv3, ref: POODLE
+    	ssl_prefer_server_ciphers on;
+
+    	##
+    	# Logging Settings
+    	##
+
+    	access_log /var/log/nginx/access.log;
+    	error_log /var/log/nginx/error.log;
+
+    	##
+    	# Gzip Settings
+    	##
+
+    	gzip on;
+    	gzip_disable "msie6";
+
+    	# gzip_vary on;
+    	# gzip_proxied any;
+    	# gzip_comp_level 6;
+    	# gzip_buffers 16 8k;
+    	# gzip_http_version 1.1;
+    	# gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+
+    	##
+    	# Virtual Host Configs
+    	##
+
+    	include /etc/nginx/conf.d/*.conf;
+    	include /etc/nginx/sites-enabled/*;
+}
+
+
+#mail {
+#   	# See sample authentication script at:
+#   	# http://wiki.nginx.org/ImapAuthenticateWithApachePhpScript
+#
+#   	# auth_http localhost/auth.php;
+#   	# pop3_capabilities "TOP" "USER";
+#   	# imap_capabilities "IMAP4rev1" "UIDPLUS";
+#
+#   	server {
+#           	listen 	localhost:110;
+#           	protocol   pop3;
+#           	proxy  	on;
+#   	}
+#
+#   	server {
+#           	listen 	localhost:143;
+#           	protocol   imap;
+#           	proxy  	on;
+#   	}
+#}
+EOF
+
+cat > /etc/nginx/sites-available/CTFd <<EOF
+proxy_cache_path /home/CTFd/nginxCache levels=1:2 keys_zone=my_cache:10m max_size=8g
+             	inactive=10m use_temp_path=off;
+server {
+    	listen 80 default_server;
+    	server_name _;
+    	return 301 https://$host$request_uri;
+}
+
+server {
+    	listen 443 ssl;
+    	#ssl_certificate /etc/letsencrypt/live/YOURCTFDOMAIN.DOMAIN/fullchain.pem;
+    	#ssl_certificate_key /etc/letsencrypt/live/YOURCTFDOMAIN.DOMAIN/privkey.pem;
+    	#include /etc/letsencrypt/options-ssl-nginx.conf;
+    	server_name CTFd;
+    	location = /favicon.ico { access_log off; log_not_found off; }
+ location /static/ {
+    	root /home/CTFd/CTFd/CTFd;
+ }
+    	location / {
+    	include proxy_params;
+    	proxy_cache my_cache;
+    	proxy_pass http://localhost:8000;
+    	}
+ }
+EOF
 rm /etc/nginx/sites-enabled/default
 ln -s /etc/nginx/sites-available/CTFd /etc/nginx/sites-enabled/default
 
@@ -67,7 +198,14 @@ sed -i '13i\         include /etc/letsencrypt/options-ssl-nginx.conf;\' /etc/ngi
 /etc/init.d/nginx restart
 
 #Create File to run CTFd at boot
-echo "IyEvYmluL2Jhc2gKI1NldHVwIHBlcnNpc3RlbmNlIGZvciBDVEZkLgpDVEZfTkFNRT0iQ1RGZCIKY2QgL2V0Yy9jcm9uLmQvOwplY2hvIC1lICJTSEVMTD0vYmluL3NoIiA+ICRDVEZfTkFNRTsKZWNobyAtZSAiUEFUSD0vdXNyL2xvY2FsL3NiaW46L3Vzci9sb2NhbC9iaW46L3NiaW46L2JpbjovdXNyL3NiaW46L3Vzci9iaW4iID4+ICRDVEZfTkFNRTsKZWNobyAtZSAiQHJlYm9vdCAgIHJvb3QgICAgL2hvbWUvQ1RGZC9DVEZkL3N0YXJ0LnNoIiA+PiAkQ1RGX05BTUU7" | base64 -d >> /home/CTFd/CTFd/cron.sh
+cat > /home/CTFd/CTFd/cron.sh <<EOF
+#!/bin/bash
+#Setup persistence for CTFd.
+CTF_NAME="CTFd"
+cd /etc/cron.d/;
+echo -e "SHELL=/bin/sh" > $CTF_NAME;
+echo -e "PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin" >> $CTF_NAME;
+EOF
 chmod +x cron.sh && ./cron.sh;
 echo "########################################################################"
 echo "CTFd is ready"
@@ -77,8 +215,27 @@ echo "########################################################################"
 
 function http {
 #Create File to run CTFd at boot
-echo "aW1wb3J0IG11bHRpcHJvY2Vzc2luZwoKYmluZCA9ICIwLjAuMC4wOjgwIgp3b3JrZXJzID0gbXVsdGlwcm9jZXNzaW5nLmNwdV9jb3VudCgpICogMiArIDEKdGhyZWFkcyA9IDIKd29ya2VyX2NsYXNzID0gImdldmVudCIKd29ya2VyX2Nvbm5lY3Rpb25zID0gNDAwCnRpbWVvdXQgPSAzMAprZWVwYWxpdmUgPSAyCgo=" | base64 -d >> /home/CTFd/CTFd/gunicorn.cfg
-echo "IyEvYmluL2Jhc2gKI1NldHVwIHBlcnNpc3RlbmNlIGZvciBDVEZkLgpDVEZfTkFNRT0iQ1RGZCIKY2QgL2V0Yy9jcm9uLmQvOwplY2hvIC1lICJTSEVMTD0vYmluL3NoIiA+ICRDVEZfTkFNRTsKZWNobyAtZSAiUEFUSD0vdXNyL2xvY2FsL3NiaW46L3Vzci9sb2NhbC9iaW46L3NiaW46L2JpbjovdXNyL3NiaW46L3Vzci9iaW4iID4+ICRDVEZfTkFNRTsKZWNobyAtZSAiQHJlYm9vdCAgIHJvb3QgICAgL2hvbWUvQ1RGZC9DVEZkL3N0YXJ0LnNoIiA+PiAkQ1RGX05BTUU7" | base64 -d >> /home/CTFd/CTFd/cron.sh
+cat > /home/CTFd/CTFd/gunicorn.cfg <<EOF
+import multiprocessing
+
+bind = "0.0.0.0:80"
+workers = multiprocessing.cpu_count() * 2 + 1
+threads = 2
+worker_class = "gevent"
+worker_connections = 400
+timeout = 30
+keepalive = 2
+EOF
+
+cat > /home/CTFd/CTFd/cron.sh <<EOF
+#!/bin/bash
+#Setup persistence for CTFd.
+CTF_NAME="CTFd"
+cd /etc/cron.d/;
+echo -e "SHELL=/bin/sh" > $CTF_NAME;
+echo -e "PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin" >> $CTF_NAME;
+EOF
+
 chmod +x cron.sh && ./cron.sh;
 nohup /home/CTFd/CTFd/start.sh
 sleep 10
